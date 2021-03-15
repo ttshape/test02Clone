@@ -41,6 +41,7 @@
 name: 'Terraform on Pull Request'
 
 on:
+  workflow_dispatch:
   pull_request:
   push:
     branches:
@@ -52,10 +53,7 @@ env:
 # https://www.terraform.io/docs/cli/config/environment-variables.html#tf_input  
   TF_INPUT : 0
   GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
-  terraformBackendBucket: "dxp-teraas-dev-backends"
-  terraformBackendPrefix: "test03"
-  terraformVersion: "0.14.6"
-  terraformConfigurationDirectory: "./terraform_configurations/backendBucket/"
+  terraformBackendPrefix: "default"
   apply: ${{ github.ref == 'refs/heads/main' && github.event_name == 'push' }}
 
 
@@ -72,6 +70,14 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v2
+    - name: Read environment variables
+      run: |
+           git fetch origin environments
+           git show remotes/origin/environments:default.env > default.env
+    - name: Set environments variables
+      uses: c-py/action-dotenv-to-setenv@v2
+      with:
+        env-file: default.env
     - name: Install Terraform
       uses: hashicorp/setup-terraform@v1
       with:
@@ -79,14 +85,17 @@ jobs:
     - name: Terraform fmt
       id: fmt
       run: terraform fmt -check
+      working-directory: "${{ env.workingDirectory }}"
       continue-on-error: true
      # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, version.
     - name: Terraform init
       id: init
-      run: terraform init -backend-config="bucket=${{ env.terraformBackendBucket }}" -backend-config="prefix=${{ env.terraformBackendPrefix }}"
+      run: terraform init -backend-config="bucket=${{ env.bucketName }}" -backend-config="prefix=${{ env.terraformBackendPrefix }}"
+      working-directory: "${{ env.workingDirectory }}"
     - name: Terraform plan
       id: plan
       run: terraform plan -no-color
+      working-directory: "${{ env.workingDirectory }}"
       continue-on-error: true
     - name: Update Pull Request
       uses: actions/github-script@0.9.0
@@ -114,3 +123,4 @@ jobs:
     - name: Terraform apply
       if: env.apply == 'true'
       run: terraform apply -auto-approve
+      working-directory: "${{ env.workingDirectory }}"
