@@ -65,7 +65,6 @@ jobs:
     defaults:
       run:
         shell: bash
-        working-directory: "${{ env.terraformConfigurationDirectory }}"
 
     steps:
     - name: Checkout
