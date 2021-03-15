@@ -89,7 +89,7 @@ jobs:
      # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, version.
     - name: Terraform init
       id: init
-      run: terraform init -backend-config="bucket=${{ env.bucketName }}" -backend-config="prefix=${{ env.terraformBackendPrefix }}"
+      run: terraform init -backend-config="\"bucket=${{ env.bucketName }}\"" -backend-config="\"prefix=${{ env.terraformBackendPrefix }}\""
       working-directory: "${{ env.workingDirectory }}"
     - name: Terraform plan
       id: plan
